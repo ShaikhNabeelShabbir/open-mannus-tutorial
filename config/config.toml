@@ -1,0 +1,6 @@
+[llm]
+model = "gpt-4o"
+base_url = "https://openrouter.ai/api/v1"
+api_key = "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"  # Replace with your actual API key
+max_tokens = 4096
+temperature = 0.0
