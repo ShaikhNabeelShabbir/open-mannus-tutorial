@@ -5,6 +5,9 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from app.agent.manus import Manus
 from app.agent.mcp import MCPAgent
+from app.agent.data_eng_agent import DataEngAgent
+from app.agent.product_manager_agent import ProductManagerAgent
+from app.agent.tech_lead_agent import TechLeadAgent
 from app.logger import logger
 
 app = Flask(__name__)
@@ -23,6 +26,12 @@ def get_agent(agent_type):
             agents[agent_type] = Manus()
         elif agent_type == "mcp":
             agents[agent_type] = MCPAgent()
+        elif agent_type == "data_eng":
+            agents[agent_type] = DataEngAgent()
+        elif agent_type == "product_manager":
+            agents[agent_type] = ProductManagerAgent()
+        elif agent_type == "tech_lead":
+            agents[agent_type] = TechLeadAgent()
         # Add more agent types as needed
     return agents[agent_type]
 
@@ -56,7 +65,7 @@ def query_agent():
 @app.route('/api/agents', methods=['GET'])
 def list_agents():
     """List available agent types"""
-    available_agents = ["manus", "mcp"]
+    available_agents = ["manus", "mcp", "data_eng", "product_manager", "tech_lead"]
     return jsonify({'agents': available_agents})
 
 @app.route('/api/cleanup', methods=['POST'])
