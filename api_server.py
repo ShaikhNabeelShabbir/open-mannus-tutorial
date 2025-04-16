@@ -11,6 +11,7 @@ from app.agent.tech_lead_agent import TechLeadAgent
 from app.agent.finance_lead_agent import FinanceLeadAgent
 from app.agent.law_lead_agent import LawLeadAgent
 from app.agent.seo_lead_agent import SEOLeadAgent
+from app.agent.marketing_lead_agent import MarketingLeadAgent
 from app.logger import logger
 
 app = Flask(__name__)
@@ -41,6 +42,8 @@ def get_agent(agent_type):
             agents[agent_type] = LawLeadAgent()
         elif agent_type == "seo_lead":
             agents[agent_type] = SEOLeadAgent()
+        elif agent_type == "marketing_lead":
+            agents[agent_type] = MarketingLeadAgent()
         # Add more agent types as needed
     return agents[agent_type]
 
@@ -74,7 +77,7 @@ def query_agent():
 @app.route('/api/agents', methods=['GET'])
 def list_agents():
     """List available agent types"""
-    available_agents = ["manus", "mcp", "data_eng", "product_manager", "tech_lead", "finance_lead", "law_lead", "seo_lead"]
+    available_agents = ["manus", "mcp", "data_eng", "product_manager", "tech_lead", "finance_lead", "law_lead", "seo_lead", "marketing_lead"]
     return jsonify({'agents': available_agents})
 
 @app.route('/api/cleanup', methods=['POST'])
