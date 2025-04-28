@@ -41,9 +41,29 @@ class AgentCallTool(Tool):
     # Store instances of agents that have been created
     _agent_instances = {}
 
+    # Map agent types to human-readable descriptions
+    _agent_descriptions = {
+        "mcp": "Browser Automation Specialist",
+        "data_eng": "Data Engineering Expert",
+        "product_manager": "Product Management Specialist",
+        "tech_lead": "Technical Architecture Expert",
+        "finance_lead": "Financial Analysis Specialist",
+        "law_lead": "Legal Specialist",
+        "seo_lead": "SEO Expert",
+        "marketing_lead": "Marketing Specialist",
+        "hr_lead": "Human Resources Specialist"
+    }
+
     async def _run(self, agent_type: str, query: str, context: Optional[str] = None) -> str:
         """Run a query using the specified agent."""
         try:
+            # Get agent description for logging
+            agent_description = self._agent_descriptions.get(agent_type, agent_type)
+
+            # Log delegation message visible to user
+            delegation_message = f"🔄 Delegating to {agent_description} ({agent_type}) agent for specialized assistance..."
+            logger.warning(delegation_message)  # Using warning level for user visibility
+
             # Create or retrieve the agent instance
             agent = self._get_agent(agent_type)
 
@@ -52,10 +72,20 @@ class AgentCallTool(Tool):
 
             # Run the agent with the query
             logger.info(f"🤖 Calling agent '{agent_type}' with query: {query}")
+
+            # Add another user-visible log indicating the agent is processing
+            logger.warning(f"⏳ {agent_description} agent is processing your request...")
+
             result = await agent.run(full_query)
 
+            # Log completion message visible to user
+            logger.warning(f"✅ {agent_description} agent has completed the task")
             logger.info(f"✅ Agent '{agent_type}' finished processing")
-            return f"Result from {agent_type} agent:\n{result}"
+
+            # Format the result with clear indication it came from another agent
+            formatted_result = f"=== Results from {agent_description} ({agent_type}) ===\n\n{result}\n\n=== End of {agent_description} Results ==="
+
+            return formatted_result
 
         except Exception as e:
             error_msg = f"Error calling agent '{agent_type}': {str(e)}"

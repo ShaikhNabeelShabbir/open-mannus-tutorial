@@ -5,6 +5,7 @@ from pydantic import Field, model_validator
 from app.agent.browser import BrowserContextHelper
 from app.agent.toolcall import ToolCallAgent
 from app.config import config
+from app.logger import logger
 from app.prompt.manus import NEXT_STEP_PROMPT, SYSTEM_PROMPT
 from app.tool import Terminate, ToolCollection
 from app.tool.agent_call_tool import AgentCallTool
@@ -63,6 +64,34 @@ class Manus(ToolCallAgent):
 
         # Restore original prompt
         self.next_step_prompt = original_prompt
+
+        return result
+
+    async def execute_tool(self, command) -> str:
+        """Override to add logging for agent delegation."""
+        # Check if this is an agent call tool
+        if command.function.name == "call_agent":
+            logger.warning("🧠 Manus is analyzing your request and considering specialized assistance...")
+
+        # Call the parent method to execute the tool
+        result = await super().execute_tool(command)
+
+        # Additional logging after executing the agent call
+        if command.function.name == "call_agent":
+            logger.warning("🔄 Manus has received specialized input and is integrating it with its analysis...")
+
+        return result
+
+    async def run(self, request: Optional[str] = None) -> str:
+        """Override to add logging when Manus starts processing."""
+        if request:
+            logger.warning(f"🔍 Manus is analyzing your request: \"{request}\"")
+            logger.warning("🤖 Manus may delegate to specialized agents if needed for this task...")
+
+        result = await super().run(request)
+
+        # Add completion message
+        logger.warning("✨ Manus has completed processing your request")
 
         return result
 
