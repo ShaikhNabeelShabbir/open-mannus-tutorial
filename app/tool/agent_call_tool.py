@@ -1,4 +1,5 @@
 from typing import Any, Dict, Optional
+import json
 
 from pydantic import BaseModel, Field
 
@@ -12,21 +13,10 @@ from app.agent.seo_lead_agent import SEOLeadAgent
 from app.agent.marketing_lead_agent import MarketingLeadAgent
 from app.agent.hr_lead_agent import HRLeadAgent
 from app.logger import logger
-from app.tool import Tool
+from app.tool.base import BaseTool
 
 
-class AgentCallParams(BaseModel):
-    """Parameters for calling an agent."""
-    agent_type: str = Field(
-        description="Type of agent to call. Options: mcp, data_eng, product_manager, tech_lead, finance_lead, law_lead, seo_lead, marketing_lead, hr_lead"
-    )
-    query: str = Field(description="Query to send to the agent")
-    context: Optional[str] = Field(
-        None, description="Additional context to provide to the agent"
-    )
-
-
-class AgentCallTool(Tool):
+class AgentCallTool(BaseTool):
     """Tool for calling other agents."""
 
     name: str = "call_agent"
@@ -36,7 +26,25 @@ class AgentCallTool(Tool):
         "Available agents: mcp, data_eng, product_manager, tech_lead, finance_lead, "
         "law_lead, seo_lead, marketing_lead, hr_lead"
     )
-    parameters: Any = AgentCallParams
+    parameters: dict = {
+        "type": "object",
+        "properties": {
+            "agent_type": {
+                "type": "string",
+                "description": "Type of agent to call. Options: mcp, data_eng, product_manager, tech_lead, finance_lead, law_lead, seo_lead, marketing_lead, hr_lead",
+                "enum": ["mcp", "data_eng", "product_manager", "tech_lead", "finance_lead", "law_lead", "seo_lead", "marketing_lead", "hr_lead"]
+            },
+            "query": {
+                "type": "string",
+                "description": "Query to send to the agent"
+            },
+            "context": {
+                "type": "string",
+                "description": "Additional context to provide to the agent"
+            }
+        },
+        "required": ["agent_type", "query"]
+    }
 
     # Store instances of agents that have been created
     _agent_instances = {}
@@ -54,8 +62,16 @@ class AgentCallTool(Tool):
         "hr_lead": "Human Resources Specialist"
     }
 
-    async def _run(self, agent_type: str, query: str, context: Optional[str] = None) -> str:
-        """Run a query using the specified agent."""
+    async def execute(self, **kwargs) -> str:
+        """Run a query using the specified agent with properly parsed parameters."""
+        # Extract parameters from kwargs
+        agent_type = kwargs.get("agent_type")
+        query = kwargs.get("query")
+        context = kwargs.get("context")
+
+        if not agent_type or not query:
+            return "Error: Missing required parameters (agent_type and query)"
+
         try:
             # Get agent description for logging
             agent_description = self._agent_descriptions.get(agent_type, agent_type)

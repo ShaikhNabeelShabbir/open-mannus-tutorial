@@ -20,7 +20,7 @@ async def test_agent_call_basic(mock_logger, mock_mcp_agent, agent_call_tool):
     mock_mcp_agent.return_value = mock_agent_instance
 
     # Call the tool
-    result = await agent_call_tool._run(
+    result = await agent_call_tool.execute(
         agent_type="mcp",
         query="Test query"
     )
@@ -47,7 +47,7 @@ async def test_agent_call_with_context(mock_logger, mock_mcp_agent, agent_call_t
     mock_mcp_agent.return_value = mock_agent_instance
 
     # Call the tool with context
-    result = await agent_call_tool._run(
+    result = await agent_call_tool.execute(
         agent_type="mcp",
         query="Test query",
         context="This is some context"
@@ -72,7 +72,7 @@ async def test_agent_call_error_handling(mock_logger, mock_mcp_agent, agent_call
     mock_mcp_agent.return_value = mock_agent_instance
 
     # Call the tool
-    result = await agent_call_tool._run(
+    result = await agent_call_tool.execute(
         agent_type="mcp",
         query="Test query"
     )
@@ -84,6 +84,19 @@ async def test_agent_call_error_handling(mock_logger, mock_mcp_agent, agent_call
 
 @patch("app.tool.agent_call_tool.MCPAgent")
 @patch("app.tool.agent_call_tool.logger")
+async def test_agent_call_missing_parameters(mock_logger, mock_mcp_agent, agent_call_tool):
+    """Test that the agent call tool handles missing parameters correctly."""
+    # Call with missing query
+    result = await agent_call_tool.execute(agent_type="mcp")
+    assert "Error: Missing required parameters" in result
+
+    # Call with missing agent_type
+    result = await agent_call_tool.execute(query="Test query")
+    assert "Error: Missing required parameters" in result
+
+
+@patch("app.tool.agent_call_tool.MCPAgent")
+@patch("app.tool.agent_call_tool.logger")
 async def test_agent_cleanup(mock_logger, mock_mcp_agent, agent_call_tool):
     """Test that the agent call tool cleans up properly."""
     # Set up the mock
@@ -91,7 +104,7 @@ async def test_agent_cleanup(mock_logger, mock_mcp_agent, agent_call_tool):
     mock_mcp_agent.return_value = mock_agent_instance
 
     # Call the tool first to initialize the agent
-    await agent_call_tool._run(agent_type="mcp", query="Test query")
+    await agent_call_tool.execute(agent_type="mcp", query="Test query")
 
     # Call cleanup
     await agent_call_tool.cleanup()
@@ -116,5 +129,6 @@ if __name__ == "__main__":
     asyncio.run(test_agent_call_basic(AsyncMock(), AgentCallTool()))
     asyncio.run(test_agent_call_with_context(AsyncMock(), AgentCallTool()))
     asyncio.run(test_agent_call_error_handling(AsyncMock(), AgentCallTool()))
+    asyncio.run(test_agent_call_missing_parameters(AsyncMock(), AgentCallTool()))
     asyncio.run(test_agent_cleanup(AsyncMock(), AgentCallTool()))
     asyncio.run(test_agent_description_mapping(AsyncMock(), AgentCallTool()))
